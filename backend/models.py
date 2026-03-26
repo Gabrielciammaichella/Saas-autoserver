@@ -4,9 +4,13 @@ from extensions import db
 
 
 class User(db.Model):
+    PLAN_FREE = "FREE"
+    PLAN_PRO = "PRO"
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
+    plan = db.Column(db.String(20), nullable=False, default=PLAN_FREE)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     monitors = db.relationship("Monitor", backref="user", lazy=True)
@@ -16,6 +20,15 @@ class User(db.Model):
 
     def check_password(self, raw_password: str) -> bool:
         return check_password_hash(self.password_hash, raw_password)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "plan": (self.plan or self.PLAN_FREE),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 class Monitor(db.Model):
     id = db.Column(db.Integer, primary_key=True)

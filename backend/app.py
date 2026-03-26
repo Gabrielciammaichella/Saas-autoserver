@@ -3,12 +3,12 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 
+load_dotenv()  # 🔥 importante
+
 from config import Config
 from extensions import db, jwt
 
 def create_app():
-    load_dotenv()
-
     app = Flask(__name__, instance_relative_config=True)
 
     os.makedirs(os.path.join(os.path.dirname(__file__), "instance"), exist_ok=True)
@@ -20,16 +20,18 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
 
-    # Importar modelos para que SQLAlchemy los registre
     from models import User, Monitor  # noqa: F401
 
-    # Blueprints
     from routes_auth import auth_bp
     from routes_monitors import monitors_bp
-
+    from routes_billing import billing_bp
+    from routes_me import me_bp
+    app.register_blueprint(me_bp, url_prefix="/api/me")
+    
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(monitors_bp, url_prefix="/api/monitors")
-
+    app.register_blueprint(billing_bp, url_prefix="/api/billing")
+    
     @app.get("/api/health")
     def health():
         return jsonify({"ok": True, "service": "PingTrace API"})
